@@ -1,4 +1,5 @@
 "use client";
+import AnnouncementOverlay from "@/components/AnnouncementOverlay";
 import {
   motion,
   AnimatePresence,
@@ -10,11 +11,12 @@ import {
 import { useEffect, useRef, useState } from "react";
 
 type Member = {
+  id?: number;
   name: string;
   desc: string;
   img: string;
-  link?: string;
-  platform?: "twitch" | "youtube" | "twitter";
+  link?: string | null;
+  platform?: "twitch" | "youtube" | "twitter" | null;
 };
 
 type Particle = {
@@ -28,7 +30,7 @@ type Particle = {
 
 export default function Home() {
   /* ===== 成員 ===== */
-  const members: Member[] = [
+  const fallbackMembers: Member[] = [
     {
       name: "時乃流綺",
       desc: `時乃流綺，來自時之塔的時之精靈 ⏳✨
@@ -128,18 +130,62 @@ export default function Home() {
       platform: "twitter",
     },
     {
-      name: "???",
-      desc: "來自未知時間線的存在…… 沒有任何紀錄， 沒有任何過去， 甚至——不確定是否真正存在。 「他」正在被觀測， 但同時也在觀測我們。",
-      img: "/images/黑黑剪影.png",
+      name: "黑黑",
+      desc: `從世界某個角落誕生的煤炭球，
+某一天，被我們在角落裡發現了。
+黑黑的、小小的，平時總是安靜地待著。
+
+但只要有遊戲需要肝——
+這顆煤炭球就會默默滾過來，
+不知不覺幫忙肝了好幾個小時 🎮`,
+      img: "/images/黑黑.jpg",
     },
   ];
 
+  const [members, setMembers] = useState<Member[]>(fallbackMembers);
   const [active, setActive] = useState<number>(0);
   const total = members.length;
+  const currentMember = members[active] ?? fallbackMembers[0];
   const [isAnimating, setIsAnimating] = useState<boolean>(false);
 
+  useEffect(() => {
+    const isValidMember = (member: unknown): member is Member => {
+      if (!member || typeof member !== "object") return false;
+      const item = member as Partial<Member>;
+      return (
+        typeof item.name === "string" &&
+        typeof item.desc === "string" &&
+        typeof item.img === "string" &&
+        item.name.length > 0 &&
+        item.desc.length > 0 &&
+        item.img.length > 0
+      );
+    };
+
+    const fetchMembers = async () => {
+      try {
+        const res = await fetch("/api/members", { cache: "no-store" });
+        if (!res.ok) throw new Error("API error");
+
+        const data = await res.json();
+        if (
+          Array.isArray(data) &&
+          data.length > 0 &&
+          data.every(isValidMember)
+        ) {
+          setMembers(data);
+          setActive(0);
+        }
+      } catch (err) {
+        console.error("fetch members error:", err);
+      }
+    };
+
+    fetchMembers();
+  }, []);
+
   const prevMember = () => {
-    if (isAnimating) return;
+    if (isAnimating || total === 0) return;
     setIsAnimating(true);
     setActive((prev) => (prev - 1 + total) % total);
     window.setTimeout(() => {
@@ -148,7 +194,7 @@ export default function Home() {
   };
 
   const nextMember = () => {
-    if (isAnimating) return;
+    if (isAnimating || total === 0) return;
     setIsAnimating(true);
     setActive((prev) => (prev + 1) % total);
     window.setTimeout(() => {
@@ -188,7 +234,21 @@ export default function Home() {
   const [displayText, setDisplayText] = useState<string>("");
   const [startTyping, setStartTyping] = useState<boolean>(false);
   const [typingEnergy, setTypingEnergy] = useState<number>(0);
+  const [isMobileView, setIsMobileView] = useState<boolean>(false);
   const worldRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const updateIsMobileView = () => {
+      setIsMobileView(window.innerWidth < 768);
+    };
+
+    updateIsMobileView();
+    window.addEventListener("resize", updateIsMobileView);
+
+    return () => {
+      window.removeEventListener("resize", updateIsMobileView);
+    };
+  }, []);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -281,7 +341,23 @@ export default function Home() {
       particles = createParticles(width, height);
     };
 
-    const draw = () => {
+    let lastDrawTime = 0;
+
+    const isAndroidChrome = () => {
+      const userAgent = navigator.userAgent.toLowerCase();
+      return userAgent.includes("android") && userAgent.includes("chrome");
+    };
+
+    const draw = (time: number) => {
+      const frameInterval = isAndroidChrome() ? 100 : 0;
+
+      if (time - lastDrawTime < frameInterval) {
+        animationFrameId = window.requestAnimationFrame(draw);
+        return;
+      }
+
+      lastDrawTime = time;
+
       const width = window.innerWidth;
       const height = window.innerHeight;
       context.clearRect(0, 0, width, height);
@@ -328,7 +404,7 @@ export default function Home() {
     };
 
     resizeCanvas();
-    draw();
+    animationFrameId = window.requestAnimationFrame(draw);
     window.addEventListener("resize", resizeCanvas);
     return () => {
       window.removeEventListener("resize", resizeCanvas);
@@ -381,6 +457,7 @@ export default function Home() {
 
   return (
     <>
+      <AnnouncementOverlay />
       {/* ===== 背景層 ===== */}
       <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none bg-black">
         <motion.div
@@ -389,18 +466,42 @@ export default function Home() {
         >
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(70,130,255,0.18),transparent_38%),radial-gradient(circle_at_80%_20%,rgba(0,220,255,0.14),transparent_28%),radial-gradient(circle_at_50%_85%,rgba(140,0,255,0.14),transparent_32%)]" />
           <motion.div
-            animate={{ scale: [1, 1.08, 1], opacity: [0.2, 0.35, 0.2] }}
-            transition={{ duration: 9, repeat: Infinity, ease: "easeInOut" }}
+            animate={
+              isMobileView
+                ? undefined
+                : { scale: [1, 1.08, 1], opacity: [0.2, 0.35, 0.2] }
+            }
+            transition={
+              isMobileView
+                ? undefined
+                : { duration: 9, repeat: Infinity, ease: "easeInOut" }
+            }
             className="absolute -top-32 -left-24 h-[28rem] w-[28rem] rounded-full bg-cyan-400/20 blur-[120px]"
           />
           <motion.div
-            animate={{ scale: [1.05, 1, 1.05], opacity: [0.14, 0.3, 0.14] }}
-            transition={{ duration: 11, repeat: Infinity, ease: "easeInOut" }}
+            animate={
+              isMobileView
+                ? undefined
+                : { scale: [1.05, 1, 1.05], opacity: [0.14, 0.3, 0.14] }
+            }
+            transition={
+              isMobileView
+                ? undefined
+                : { duration: 11, repeat: Infinity, ease: "easeInOut" }
+            }
             className="absolute top-[18%] right-[-8rem] h-[30rem] w-[30rem] rounded-full bg-blue-500/20 blur-[140px]"
           />
           <motion.div
-            animate={{ scale: [1, 1.12, 1], opacity: [0.1, 0.24, 0.1] }}
-            transition={{ duration: 13, repeat: Infinity, ease: "easeInOut" }}
+            animate={
+              isMobileView
+                ? undefined
+                : { scale: [1, 1.12, 1], opacity: [0.1, 0.24, 0.1] }
+            }
+            transition={
+              isMobileView
+                ? undefined
+                : { duration: 13, repeat: Infinity, ease: "easeInOut" }
+            }
             className="absolute bottom-[-10rem] left-[20%] h-[26rem] w-[26rem] rounded-full bg-fuchsia-500/20 blur-[140px]"
           />
         </motion.div>
@@ -414,7 +515,7 @@ export default function Home() {
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.05),transparent_48%)]" />
         <canvas
         ref={canvasRef}
-        className="fixed inset-0 z-30 pointer-events-none"
+        className="fixed inset-0 z-10 pointer-events-none"
         />
         <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/75 z-[1]" />
       </div>
@@ -424,6 +525,9 @@ export default function Home() {
         <div className="max-w-6xl mx-auto px-6 py-3 flex justify-between items-center">
           <span className="font-bold text-lg tracking-wide">Chronoria</span>
           <div className="flex gap-6 text-sm text-gray-300">
+            <a href="https://x.com/chronoria_realm" className="hover:text-white transition">
+              時序之境官方推特
+            </a>
             <a href="#world" className="hover:text-white transition">
               世界觀
             </a>
@@ -435,21 +539,21 @@ export default function Home() {
       </div>
 
       <main className="pt-16 bg-transparent text-white relative z-20">
-        {/* Hero */}
-        <section className="h-screen snap-start flex flex-col items-center justify-center relative overflow-hidden px-4">
+      {/* Hero */}
+<section className="h-[100svh] snap-start flex flex-col items-center justify-center relative overflow-hidden px-4">
 
-  {/* ⭐ 背景層（動最大） */}
-  <motion.div
-    style={{ x: heroTranslateX, y: heroTranslateY }}
-    className="absolute inset-0 pointer-events-none"
-  >
+{/* ⭐ 背景層（動最大） */}
+<motion.div
+  style={{ x: heroTranslateX, y: heroTranslateY }}
+  className="absolute inset-0 pointer-events-none"
+>
     <div className="absolute left-1/2 top-1/2 h-[22rem] w-[22rem] -translate-x-1/2 -translate-y-1/2 rounded-full bg-cyan-400/10 blur-[120px]" />
     <div className="absolute left-1/2 top-1/2 h-[32rem] w-[32rem] -translate-x-1/2 -translate-y-1/2 rounded-full border border-cyan-300/10" />
     <div className="absolute left-1/2 top-1/2 h-[42rem] w-[42rem] -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/[0.04]" />
   </motion.div>
 
   {/* ⭐ 主內容 */}
-  <div className="relative z-10 flex flex-col items-center">
+  <div className="relative z-10 flex flex-col items-center -translate-y-16 md:-translate-y-20">
 
     {/* ⭐ LOGO（中層 → 動較小） */}
     <motion.img
@@ -458,21 +562,23 @@ export default function Home() {
         x: useTransform(heroTranslateX, (v) => v * 0.5),
         y: useTransform(heroTranslateY, (v) => v * 0.5),
       }}
-      animate={{
-        scale: [1, 1.08, 1],
-        filter: [
-          "drop-shadow(0 0 20px rgba(0,200,255,0.3))",
-          "drop-shadow(0 0 40px rgba(0,200,255,0.6))",
-          "drop-shadow(0 0 20px rgba(0,200,255,0.3))",
-        ],
-        y: [0, -8, 0],
-      }}
-      transition={{
-        scale: { duration: 4, repeat: Infinity, ease: "easeInOut" },
-        filter: { duration: 4, repeat: Infinity, ease: "easeInOut" },
-        y: { duration: 5, repeat: Infinity, ease: "easeInOut" },
-      }}
-      className="w-[400px] md:w-[600px] relative z-10"
+      animate={
+        isMobileView
+          ? undefined
+          : {
+              scale: [1, 1.04, 1],
+              y: [0, -6, 0],
+            }
+      }
+      transition={
+        isMobileView
+          ? undefined
+          : {
+              scale: { duration: 4, repeat: Infinity, ease: "easeInOut" },
+              y: { duration: 5, repeat: Infinity, ease: "easeInOut" },
+            }
+      }
+      className="w-[400px] md:w-[600px] relative z-10 drop-shadow-[0_0_28px_rgba(0,200,255,0.45)]"
       alt="時序之境 Logo"
     />
 
@@ -524,62 +630,74 @@ export default function Home() {
                 <h2 className="text-3xl mb-6">關於這個世界</h2>
                 <p className="text-gray-300 whitespace-pre-line leading-8 text-left">
                   <>
-                    {displayText.split("\n").map((line, lineIndex) => {
-                      if (line.trim() === "") {
-                        return <div key={lineIndex} className="h-6"></div>;
-                      }
-                      return (
-                        <div key={lineIndex} className="w-full">
-                          {line.split("").map((char, index) => {
-                            const glitchChars = [
-                              "時",
-                              "間",
-                              "裂",
-                              "隙",
-                              "存",
-                              "在",
-                              "命",
-                              "運",
-                            ];
-                            const isGlitch = glitchChars.includes(char);
-                            return (
-                              <motion.span
-                                key={index}
-                                initial={{ opacity: 0, filter: "blur(6px)" }}
-                                animate={{
-                                  opacity: 1,
-                                  filter: "blur(0px)",
-                                  textShadow: [
-                                    "0 0 0px rgba(0,200,255,0)",
-                                    "0 0 10px rgba(0,200,255,0.6)",
-                                    "0 0 0px rgba(0,200,255,0)",
-                                  ],
-                                }}
-                                transition={{
-                                  duration: 0.4,
-                                  delay: lineIndex * 0.05 + index * 0.003,
-                                }}
-                                className="inline"
-                              >
-                                {isGlitch ? (
-                                  <span className="relative">
-                                    {char}
-                                    <span className="absolute left-0 top-0 text-cyan-300 opacity-70 glitch-layer">
-                                      {char}
-                                    </span>
-                                    <span className="absolute left-0 top-0 text-fuchsia-400 opacity-50 glitch-layer2">
-                                      {char}
-                                    </span>
-                                  </span>
-                                ) : (
-                                  char
-                                )}
-                              </motion.span>
-                            );
-                          })}
-                        </div>
-                      );
-                    })}
+                    {isMobileView
+                      ? displayText.split("\n").map((line, lineIndex) => {
+                          if (line.trim() === "") {
+                            return <div key={lineIndex} className="h-6"></div>;
+                          }
+
+                          return (
+                            <div key={lineIndex} className="w-full">
+                              {line}
+                            </div>
+                          );
+                        })
+                      : displayText.split("\n").map((line, lineIndex) => {
+                          if (line.trim() === "") {
+                            return <div key={lineIndex} className="h-6"></div>;
+                          }
+                          return (
+                            <div key={lineIndex} className="w-full">
+                              {line.split("").map((char, index) => {
+                                const glitchChars = [
+                                  "時",
+                                  "間",
+                                  "裂",
+                                  "隙",
+                                  "存",
+                                  "在",
+                                  "命",
+                                  "運",
+                                ];
+                                const isGlitch = glitchChars.includes(char);
+                                return (
+                                  <motion.span
+                                    key={index}
+                                    initial={{ opacity: 0, filter: "blur(6px)" }}
+                                    animate={{
+                                      opacity: 1,
+                                      filter: "blur(0px)",
+                                      textShadow: [
+                                        "0 0 0px rgba(0,200,255,0)",
+                                        "0 0 10px rgba(0,200,255,0.6)",
+                                        "0 0 0px rgba(0,200,255,0)",
+                                      ],
+                                    }}
+                                    transition={{
+                                      duration: 0.4,
+                                      delay: lineIndex * 0.05 + index * 0.003,
+                                    }}
+                                    className="inline"
+                                  >
+                                    {isGlitch ? (
+                                      <span className="relative">
+                                        {char}
+                                        <span className="absolute left-0 top-0 text-cyan-300 opacity-70 glitch-layer">
+                                          {char}
+                                        </span>
+                                        <span className="absolute left-0 top-0 text-fuchsia-400 opacity-50 glitch-layer2">
+                                          {char}
+                                        </span>
+                                      </span>
+                                    ) : (
+                                      char
+                                    )}
+                                  </motion.span>
+                                );
+                              })}
+                            </div>
+                          );
+                        })}
                     <span className="ml-1 text-cyan-300 animate-[blink_1s_steps(1)_infinite]">
                       {" "}
                       |{" "}
@@ -613,11 +731,11 @@ export default function Home() {
           {/* 👉 手機版（完全獨立） */}
           <div className="md:hidden w-full max-w-md mx-auto z-10 flex flex-col gap-6">
             <h2 className="text-3xl font-bold text-center drop-shadow-[0_0_20px_rgba(255,255,255,0.08)]">
-              {members[active].name}
+              {currentMember.name}
             </h2>
             <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl px-5 py-5 shadow-[0_0_40px_rgba(0,180,255,0.08)]">
               <p className="text-gray-300 whitespace-pre-line leading-relaxed text-base text-center px-2">
-                {members[active].desc}
+                {currentMember.desc}
               </p>
             </div>
             <div
@@ -626,7 +744,7 @@ export default function Home() {
             >
               <AnimatePresence mode="wait" initial={false}>
                 <motion.div
-                  key={members[active].img}
+                  key={currentMember.img}
                   drag="x"
                   dragDirectionLock
                   dragConstraints={{ left: 0, right: 0 }}
@@ -640,8 +758,8 @@ export default function Home() {
                   transition={{ duration: 0.35, ease: "easeOut" }}
                 >
                   <img
-                    src={members[active].img}
-                    alt={members[active].name}
+                    src={currentMember.img}
+                    alt={currentMember.name}
                     draggable={false}
                     className="max-h-[45vh] w-full object-contain drop-shadow-[0_0_40px_rgba(0,200,255,0.3)] pointer-events-none"
                   />
@@ -677,38 +795,38 @@ export default function Home() {
                   className="relative rounded-[2rem] border border-white/10 bg-white/[0.04] backdrop-blur-xl px-8 py-10 shadow-[0_0_50px_rgba(0,180,255,0.08)] overflow-hidden"
                 >
                   <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(0,220,255,0.08),transparent_34%)] pointer-events-none" />
-                  {members[active].link && (
+                  {currentMember.link && (
                     <a
-                      href={members[active].link}
+                      href={currentMember.link}
                       target="_blank"
                       rel="noopener noreferrer"
                       className={`absolute right-8 top-8 z-20 h-16 w-16 rounded-full flex items-center justify-center backdrop-blur-md border transition duration-300 ${
-                        members[active].platform === "twitch" &&
+                        currentMember.platform === "twitch" &&
                         "bg-purple-500/10 border-purple-400/20 hover:bg-purple-500/20 hover:shadow-[0_0_25px_rgba(168,85,247,0.7)]"
                       } ${
-                        members[active].platform === "youtube" &&
+                        currentMember.platform === "youtube" &&
                         "bg-red-500/10 border-red-400/20 hover:bg-red-500/20 hover:shadow-[0_0_25px_rgba(239,68,68,0.7)]"
                       } ${
-                        members[active].platform === "twitter" &&
+                        currentMember.platform === "twitter" &&
                         "bg-white/10 border-white/20 hover:bg-white/20 hover:shadow-[0_0_25px_rgba(255,255,255,0.6)]"
                       }`}
                     >
-                      {members[active].platform === "twitch" && (
+                      {currentMember.platform === "twitch" && (
                         <img src="/images/twitchlogo.svg" className="w-8 h-8" />
                       )}
-                      {members[active].platform === "youtube" && (
+                      {currentMember.platform === "youtube" && (
                         <img src="/images/ytlogo.svg" className="w-8 h-8" />
                       )}
-                      {members[active].platform === "twitter" && (
+                      {currentMember.platform === "twitter" && (
                         <img src="/images/Xlogo.svg" className="w-7 h-7" />
                       )}
                     </a>
                   )}
                   <h2 className="text-5xl font-bold mb-4 relative z-10">
-                    {members[active].name}
+                    {currentMember.name}
                   </h2>
                   <p className="text-gray-300 whitespace-pre-line leading-relaxed text-lg relative z-10">
-                    {members[active].desc}
+                    {currentMember.desc}
                   </p>
                 </motion.div>
               </AnimatePresence>
@@ -747,9 +865,9 @@ export default function Home() {
                 <div className="absolute inset-x-12 bottom-6 h-10 rounded-full bg-cyan-300/10 blur-2xl pointer-events-none" />
                 <AnimatePresence mode="wait">
                   <motion.img
-                    key={members[active].img}
-                    src={members[active].img}
-                    alt={members[active].name}
+                    key={currentMember.img}
+                    src={currentMember.img}
+                    alt={currentMember.name}
                     initial={{ opacity: 0, x: 80, scale: 0.97, rotateY: -10 }}
                     animate={{
                       opacity: 1,

@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import Navbar from "@/components/Navbar";
+import Background from "@/components/Background";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -49,12 +51,21 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="zh-TW">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        {children}
-      </body>
-    </html>
+    <html lang="zh-tw">
+  <body className={`${geistSans.variable} ${geistMono.variable} bg-black`}>
+
+    {/* 全站背景 */}
+    <Background />
+
+    {/* 全站 navbar */}
+    <Navbar />
+
+    {/* 所有頁面 */}
+    <main className="relative z-10 pt-20">
+      {children}
+    </main>
+
+  </body>
+</html>
   );
 }

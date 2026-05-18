@@ -29,6 +29,22 @@ type Particle = {
 };
 
 const defaultHeroLogo = "/images/時序之境_B_單色_光暈.png";
+const defaultWorldText =
+  "在時間交錯的縫隙之中，誕生了無數的意識與存在。時序之境，是所有時間的交會點。\n" +
+  "原本穩定流動的時間，近來開始出現異常——裂隙，在不同的世界悄然展開。\n\n" +
+  "那些裂隙吞噬了片段的時間，扭曲了記憶，也改變了既定的命運。\n" +
+  "而在時之塔中——負責觀測與修復時間的精靈們，察覺到了這些異變。\n\n" +
+  "她，是剛成為實習生的時間精靈。能力尚未成熟，卻被賦予了一項任務：\n\n" +
+  "修復那些逐漸崩壞的時間線。\n\n" +
+  "然而她很快發現...單靠自己，無法支撐整個時序的穩定。\n" +
+  "於是...她做了一個「不被允許」的決定。\n\n" +
+  "她開始介入裂隙，\n" +
+  "將那些被影響、被改變，甚至本該消失的存在...帶離原本的時間。\n" +
+  "他們，被引導至時之塔。在這裡來自不同世界、不同時間的存在，開始交會。\n\n" +
+  "有人失去了過去，有人無法回到原本的未來，也有人，開始懷疑自己是否仍屬於原本的世界。\n\n" +
+  "而她，仍在學習如何修復這一切。\n" +
+  "只是，她還不知道——這些被帶來的人，或許並不只是「被拯救的存在」。\n" +
+  "而是——改變時間的關鍵。";
 
 export default function Home() {
   /* ===== 成員 ===== */
@@ -150,6 +166,7 @@ export default function Home() {
   const currentMember = members[active] ?? fallbackMembers[0];
   const [heroBackgroundImage, setHeroBackgroundImage] = useState<string>("");
   const [heroLogoImage, setHeroLogoImage] = useState<string>(defaultHeroLogo);
+  const [worldText, setWorldText] = useState<string>(defaultWorldText);
   const hasHeroBackgroundImage = heroBackgroundImage.length > 0;
   const [isAnimating, setIsAnimating] = useState<boolean>(false);
 
@@ -206,6 +223,10 @@ export default function Home() {
         if (typeof data.heroLogoImage === "string" && data.heroLogoImage.length > 0) {
           setHeroLogoImage(data.heroLogoImage);
         }
+
+        if (typeof data.worldText === "string" && data.worldText.length > 0) {
+          setWorldText(data.worldText);
+        }
       } catch (err) {
         console.error("fetch site settings error:", err);
       }
@@ -242,24 +263,6 @@ export default function Home() {
       prevMember();
     }
   };
-
-  /* ===== 世界觀 ===== */
-  const worldText =
-    "在時間交錯的縫隙之中，誕生了無數的意識與存在。時序之境，是所有時間的交會點。\n" +
-    "原本穩定流動的時間，近來開始出現異常——裂隙，在不同的世界悄然展開。\n\n" +
-    "那些裂隙吞噬了片段的時間，扭曲了記憶，也改變了既定的命運。\n" +
-    "而在時之塔中——負責觀測與修復時間的精靈們，察覺到了這些異變。\n\n" +
-    "她，是剛成為實習生的時間精靈。能力尚未成熟，卻被賦予了一項任務：\n\n" +
-    "修復那些逐漸崩壞的時間線。\n\n" +
-    "然而她很快發現...單靠自己，無法支撐整個時序的穩定。\n" +
-    "於是...她做了一個「不被允許」的決定。\n\n" +
-    "她開始介入裂隙，\n" +
-    "將那些被影響、被改變，甚至本該消失的存在...帶離原本的時間。\n" +
-    "他們，被引導至時之塔。在這裡來自不同世界、不同時間的存在，開始交會。\n\n" +
-    "有人失去了過去，有人無法回到原本的未來，也有人，開始懷疑自己是否仍屬於原本的世界。\n\n" +
-    "而她，仍在學習如何修復這一切。\n" +
-    "只是，她還不知道——這些被帶來的人，或許並不只是「被拯救的存在」。\n" +
-    "而是——改變時間的關鍵。";
 
   const [displayText, setDisplayText] = useState<string>("");
   const [startTyping, setStartTyping] = useState<boolean>(false);

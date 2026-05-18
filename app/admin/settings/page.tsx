@@ -3,10 +3,27 @@
 import { useEffect, useState } from "react";
 
 const defaultHeroLogo = "/images/時序之境_B_單色_光暈.png";
+const defaultWorldText =
+  "在時間交錯的縫隙之中，誕生了無數的意識與存在。時序之境，是所有時間的交會點。\n" +
+  "原本穩定流動的時間，近來開始出現異常——裂隙，在不同的世界悄然展開。\n\n" +
+  "那些裂隙吞噬了片段的時間，扭曲了記憶，也改變了既定的命運。\n" +
+  "而在時之塔中——負責觀測與修復時間的精靈們，察覺到了這些異變。\n\n" +
+  "她，是剛成為實習生的時間精靈。能力尚未成熟，卻被賦予了一項任務：\n\n" +
+  "修復那些逐漸崩壞的時間線。\n\n" +
+  "然而她很快發現...單靠自己，無法支撐整個時序的穩定。\n" +
+  "於是...她做了一個「不被允許」的決定。\n\n" +
+  "她開始介入裂隙，\n" +
+  "將那些被影響、被改變，甚至本該消失的存在...帶離原本的時間。\n" +
+  "他們，被引導至時之塔。在這裡來自不同世界、不同時間的存在，開始交會。\n\n" +
+  "有人失去了過去，有人無法回到原本的未來，也有人，開始懷疑自己是否仍屬於原本的世界。\n\n" +
+  "而她，仍在學習如何修復這一切。\n" +
+  "只是，她還不知道——這些被帶來的人，或許並不只是「被拯救的存在」。\n" +
+  "而是——改變時間的關鍵。";
 
 export default function AdminSettingsPage() {
   const [heroBackgroundImage, setHeroBackgroundImage] = useState("");
   const [heroLogoImage, setHeroLogoImage] = useState("");
+  const [worldText, setWorldText] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -26,6 +43,9 @@ export default function AdminSettingsPage() {
         if (typeof data.heroLogoImage === "string") {
           setHeroLogoImage(data.heroLogoImage);
         }
+        if (typeof data.worldText === "string") {
+          setWorldText(data.worldText);
+        }
       } catch (err) {
         console.error("fetch site settings error:", err);
       } finally {
@@ -44,7 +64,7 @@ export default function AdminSettingsPage() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ heroBackgroundImage, heroLogoImage }),
+        body: JSON.stringify({ heroBackgroundImage, heroLogoImage, worldText }),
       });
 
       if (!res.ok) throw new Error("API error");
@@ -122,6 +142,21 @@ export default function AdminSettingsPage() {
                 alt="首頁 Logo 預覽"
                 className="max-h-64 w-full object-contain"
               />
+            </div>
+
+            <div>
+              <label className="block text-sm text-gray-300 mb-2">
+                世界觀文字
+              </label>
+              <textarea
+                value={worldText}
+                onChange={(e) => setWorldText(e.target.value)}
+                placeholder={defaultWorldText}
+                className="w-full p-3 bg-white/5 border border-white/10 rounded h-64 focus:outline-none focus:border-cyan-400 transition"
+              />
+              <p className="text-xs text-gray-500 mt-2">
+                留空則使用原本寫死的世界觀文字。換行會保留在首頁動畫中。
+              </p>
             </div>
 
             <button

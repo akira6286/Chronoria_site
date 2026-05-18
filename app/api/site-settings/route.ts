@@ -4,6 +4,7 @@ import type { ResultSetHeader, RowDataPacket } from "mysql2";
 
 const HERO_BACKGROUND_IMAGE_KEY = "hero_background_image";
 const HERO_LOGO_IMAGE_KEY = "hero_logo_image";
+const WORLD_TEXT_KEY = "world_text";
 
 type SettingRow = RowDataPacket & {
   key: string;
@@ -13,6 +14,7 @@ type SettingRow = RowDataPacket & {
 type SettingsBody = {
   heroBackgroundImage?: string;
   heroLogoImage?: string;
+  worldText?: string;
 };
 
 const ensureSettingsTable = async () => {
@@ -33,15 +35,16 @@ export async function GET() {
       `
       SELECT \`key\`, value
       FROM site_settings
-      WHERE \`key\` IN (?, ?)
+      WHERE \`key\` IN (?, ?, ?)
       `,
-      [HERO_BACKGROUND_IMAGE_KEY, HERO_LOGO_IMAGE_KEY]
+      [HERO_BACKGROUND_IMAGE_KEY, HERO_LOGO_IMAGE_KEY, WORLD_TEXT_KEY]
     );
     const settings = new Map(rows.map((row) => [row.key, row.value ?? ""]));
 
     return NextResponse.json({
       heroBackgroundImage: settings.get(HERO_BACKGROUND_IMAGE_KEY) || "",
       heroLogoImage: settings.get(HERO_LOGO_IMAGE_KEY) || "",
+      worldText: settings.get(WORLD_TEXT_KEY) || "",
     });
   } catch (error: unknown) {
     console.error("GET site settings error:", error);
@@ -61,6 +64,7 @@ export async function PATCH(req: Request) {
     const body = (await req.json()) as SettingsBody;
     const heroBackgroundImage = body.heroBackgroundImage?.trim();
     const heroLogoImage = body.heroLogoImage?.trim();
+    const worldText = body.worldText?.trim();
 
     if (heroBackgroundImage && heroBackgroundImage.length > 500) {
       return NextResponse.json(
@@ -96,11 +100,22 @@ export async function PATCH(req: Request) {
       `,
       [HERO_LOGO_IMAGE_KEY, heroLogoImage ?? ""]
     );
+    await db.query<ResultSetHeader>(
+      `
+      INSERT INTO site_settings (\`key\`, \`value\`, updated_at)
+      VALUES (?, ?, NOW())
+      ON DUPLICATE KEY UPDATE
+        \`value\` = VALUES(\`value\`),
+        updated_at = NOW()
+      `,
+      [WORLD_TEXT_KEY, worldText ?? ""]
+    );
 
     return NextResponse.json({
       success: true,
       heroBackgroundImage: heroBackgroundImage ?? "",
       heroLogoImage: heroLogoImage ?? "",
+      worldText: worldText ?? "",
     });
   } catch (error: unknown) {
     console.error("PATCH site settings error:", error);

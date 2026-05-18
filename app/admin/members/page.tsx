@@ -41,7 +41,7 @@ export default function AdminMembersPage() {
   }, []);
 
   const handleDelete = async (id: number) => {
-    if (!confirm("確定要刪除這個成員嗎？")) return;
+    if (!confirm("確定要刪除這位成員嗎？")) return;
 
     try {
       await fetch(`${window.location.origin}/api/members/${id}`, {
@@ -63,7 +63,7 @@ export default function AdminMembersPage() {
           onClick={() => router.push("/admin/members/new")}
           className="px-4 py-2 rounded-lg bg-cyan-500/20 border border-cyan-400/30 hover:bg-cyan-500/30 transition"
         >
-          ＋ 新增成員
+          新增成員
         </button>
       </div>
 
@@ -81,6 +81,7 @@ export default function AdminMembersPage() {
               <div className="flex items-center gap-4">
                 <img
                   src={m.img}
+                  alt={m.name}
                   className="w-16 h-16 object-cover rounded-lg border border-white/10"
                 />
 
@@ -95,12 +96,20 @@ export default function AdminMembersPage() {
                 </div>
               </div>
 
-              <button
-                onClick={() => handleDelete(m.id)}
-                className="px-3 py-1 text-sm rounded-lg border border-red-400/30 text-red-400 hover:bg-red-500/10 transition"
-              >
-                刪除
-              </button>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => router.push(`/admin/members/edit/${m.id}`)}
+                  className="px-3 py-1 text-sm rounded-lg border border-cyan-400/30 text-cyan-300 hover:bg-cyan-500/10 transition"
+                >
+                  編輯
+                </button>
+                <button
+                  onClick={() => handleDelete(m.id)}
+                  className="px-3 py-1 text-sm rounded-lg border border-red-400/30 text-red-400 hover:bg-red-500/10 transition"
+                >
+                  刪除
+                </button>
+              </div>
             </div>
           ))}
         </div>

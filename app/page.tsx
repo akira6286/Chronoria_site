@@ -490,7 +490,10 @@ export default function Home() {
       {/* ===== 背景層 ===== */}
       <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none bg-black">
         <motion.div
-          style={{ x: backgroundTranslateX, y: backgroundTranslateY }}
+          style={{
+            x: hasHeroBackgroundImage ? 0 : backgroundTranslateX,
+            y: hasHeroBackgroundImage ? 0 : backgroundTranslateY,
+          }}
           className="absolute inset-0"
         >
           {hasHeroBackgroundImage ? (

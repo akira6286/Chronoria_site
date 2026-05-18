@@ -25,7 +25,7 @@ export default function AdminHome() {
             首頁設定
           </h2>
           <p className="text-gray-400 text-sm">
-            管理首頁最上方主圖
+            管理首頁最上方背景圖
           </p>
         </Link>
 

@@ -28,7 +28,7 @@ type Particle = {
   vy: number;
 };
 
-const fallbackHeroImage = "/images/時序之境_B_單色_光暈.png";
+const defaultHeroLogo = "/images/時序之境_B_單色_光暈.png";
 
 export default function Home() {
   /* ===== 成員 ===== */
@@ -148,7 +148,8 @@ export default function Home() {
   const [active, setActive] = useState<number>(0);
   const total = members.length;
   const currentMember = members[active] ?? fallbackMembers[0];
-  const [heroImage, setHeroImage] = useState<string>(fallbackHeroImage);
+  const [heroBackgroundImage, setHeroBackgroundImage] = useState<string>("");
+  const hasHeroBackgroundImage = heroBackgroundImage.length > 0;
   const [isAnimating, setIsAnimating] = useState<boolean>(false);
 
   useEffect(() => {
@@ -194,8 +195,11 @@ export default function Home() {
         if (!res.ok) throw new Error("API error");
 
         const data = await res.json();
-        if (typeof data.heroImage === "string" && data.heroImage.length > 0) {
-          setHeroImage(data.heroImage);
+        if (
+          typeof data.heroBackgroundImage === "string" &&
+          data.heroBackgroundImage.length > 0
+        ) {
+          setHeroBackgroundImage(data.heroBackgroundImage);
         }
       } catch (err) {
         console.error("fetch site settings error:", err);
@@ -323,6 +327,8 @@ export default function Home() {
   /* ===== 粒子背景 ===== */
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   useEffect(() => {
+    if (hasHeroBackgroundImage) return;
+
     const canvas = canvasRef.current;
     if (!canvas) return;
     const context = canvas.getContext("2d");
@@ -431,7 +437,7 @@ export default function Home() {
       window.removeEventListener("resize", resizeCanvas);
       window.cancelAnimationFrame(animationFrameId);
     };
-  }, []);
+  }, [hasHeroBackgroundImage]);
 
   /* ===== 空間感 / 視差 ===== */
   const mouseX = useMotionValue(0);
@@ -450,6 +456,8 @@ export default function Home() {
 
   const backgroundTranslateX = useTransform(mouseXSmooth, [-1, 1], [-26, 26]);
   const backgroundTranslateY = useTransform(mouseYSmooth, [-1, 1], [-26, 26]);
+  const backgroundGridTranslateX = useTransform(mouseXSmooth, [-1, 1], [-10, 10]);
+  const backgroundGridTranslateY = useTransform(mouseYSmooth, [-1, 1], [-10, 10]);
   const heroTranslateX = useTransform(mouseXSmooth, [-2, 2], [-20, 20]);
   const heroTranslateY = useTransform(mouseYSmooth, [-2, 2], [-20, 20]);
   const membersTranslateX = useTransform(mouseXSmooth, [-1, 1], [-20, 20]);
@@ -485,59 +493,73 @@ export default function Home() {
           style={{ x: backgroundTranslateX, y: backgroundTranslateY }}
           className="absolute inset-0"
         >
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(70,130,255,0.18),transparent_38%),radial-gradient(circle_at_80%_20%,rgba(0,220,255,0.14),transparent_28%),radial-gradient(circle_at_50%_85%,rgba(140,0,255,0.14),transparent_32%)]" />
-          <motion.div
-            animate={
-              isMobileView
-                ? undefined
-                : { scale: [1, 1.08, 1], opacity: [0.2, 0.35, 0.2] }
-            }
-            transition={
-              isMobileView
-                ? undefined
-                : { duration: 9, repeat: Infinity, ease: "easeInOut" }
-            }
-            className="absolute -top-32 -left-24 h-[28rem] w-[28rem] rounded-full bg-cyan-400/20 blur-[120px]"
-          />
-          <motion.div
-            animate={
-              isMobileView
-                ? undefined
-                : { scale: [1.05, 1, 1.05], opacity: [0.14, 0.3, 0.14] }
-            }
-            transition={
-              isMobileView
-                ? undefined
-                : { duration: 11, repeat: Infinity, ease: "easeInOut" }
-            }
-            className="absolute top-[18%] right-[-8rem] h-[30rem] w-[30rem] rounded-full bg-blue-500/20 blur-[140px]"
-          />
-          <motion.div
-            animate={
-              isMobileView
-                ? undefined
-                : { scale: [1, 1.12, 1], opacity: [0.1, 0.24, 0.1] }
-            }
-            transition={
-              isMobileView
-                ? undefined
-                : { duration: 13, repeat: Infinity, ease: "easeInOut" }
-            }
-            className="absolute bottom-[-10rem] left-[20%] h-[26rem] w-[26rem] rounded-full bg-fuchsia-500/20 blur-[140px]"
-          />
+          {hasHeroBackgroundImage ? (
+            <img
+              src={heroBackgroundImage}
+              alt=""
+              className="absolute inset-0 h-full w-full object-cover opacity-80"
+            />
+          ) : (
+            <>
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(70,130,255,0.18),transparent_38%),radial-gradient(circle_at_80%_20%,rgba(0,220,255,0.14),transparent_28%),radial-gradient(circle_at_50%_85%,rgba(140,0,255,0.14),transparent_32%)]" />
+              <motion.div
+                animate={
+                  isMobileView
+                    ? undefined
+                    : { scale: [1, 1.08, 1], opacity: [0.2, 0.35, 0.2] }
+                }
+                transition={
+                  isMobileView
+                    ? undefined
+                    : { duration: 9, repeat: Infinity, ease: "easeInOut" }
+                }
+                className="absolute -top-32 -left-24 h-[28rem] w-[28rem] rounded-full bg-cyan-400/20 blur-[120px]"
+              />
+              <motion.div
+                animate={
+                  isMobileView
+                    ? undefined
+                    : { scale: [1.05, 1, 1.05], opacity: [0.14, 0.3, 0.14] }
+                }
+                transition={
+                  isMobileView
+                    ? undefined
+                    : { duration: 11, repeat: Infinity, ease: "easeInOut" }
+                }
+                className="absolute top-[18%] right-[-8rem] h-[30rem] w-[30rem] rounded-full bg-blue-500/20 blur-[140px]"
+              />
+              <motion.div
+                animate={
+                  isMobileView
+                    ? undefined
+                    : { scale: [1, 1.12, 1], opacity: [0.1, 0.24, 0.1] }
+                }
+                transition={
+                  isMobileView
+                    ? undefined
+                    : { duration: 13, repeat: Infinity, ease: "easeInOut" }
+                }
+                className="absolute bottom-[-10rem] left-[20%] h-[26rem] w-[26rem] rounded-full bg-fuchsia-500/20 blur-[140px]"
+              />
+            </>
+          )}
         </motion.div>
-        <motion.div
-          style={{
-            x: useTransform(mouseXSmooth, [-1, 1], [-10, 10]),
-            y: useTransform(mouseYSmooth, [-1, 1], [-10, 10]),
-          }}
-          className="absolute inset-0 bg-[linear-gradient(to_bottom,rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(to_right,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:72px_72px] opacity-[0.05]"
-        />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.05),transparent_48%)]" />
-        <canvas
-        ref={canvasRef}
-        className="fixed inset-0 z-10 pointer-events-none"
-        />
+        {!hasHeroBackgroundImage && (
+          <>
+            <motion.div
+              style={{
+                x: backgroundGridTranslateX,
+                y: backgroundGridTranslateY,
+              }}
+              className="absolute inset-0 bg-[linear-gradient(to_bottom,rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(to_right,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:72px_72px] opacity-[0.05]"
+            />
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.05),transparent_48%)]" />
+            <canvas
+            ref={canvasRef}
+            className="fixed inset-0 z-10 pointer-events-none"
+            />
+          </>
+        )}
         <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/75 z-[1]" />
       </div>
 
@@ -578,7 +600,7 @@ export default function Home() {
 
     {/* ⭐ LOGO（中層 → 動較小） */}
     <motion.img
-      src={heroImage}
+      src={defaultHeroLogo}
       style={{
         x: useTransform(heroTranslateX, (v) => v * 0.5),
         y: useTransform(heroTranslateY, (v) => v * 0.5),

@@ -2,10 +2,8 @@
 
 import { useEffect, useState } from "react";
 
-const fallbackHeroImage = "/images/時序之境_B_單色_光暈.png";
-
 export default function AdminSettingsPage() {
-  const [heroImage, setHeroImage] = useState(fallbackHeroImage);
+  const [heroBackgroundImage, setHeroBackgroundImage] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -19,8 +17,8 @@ export default function AdminSettingsPage() {
         if (!res.ok) throw new Error("API error");
 
         const data = await res.json();
-        if (typeof data.heroImage === "string" && data.heroImage.length > 0) {
-          setHeroImage(data.heroImage);
+        if (typeof data.heroBackgroundImage === "string") {
+          setHeroBackgroundImage(data.heroBackgroundImage);
         }
       } catch (err) {
         console.error("fetch site settings error:", err);
@@ -40,7 +38,7 @@ export default function AdminSettingsPage() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ heroImage }),
+        body: JSON.stringify({ heroBackgroundImage }),
       });
 
       if (!res.ok) throw new Error("API error");
@@ -70,25 +68,31 @@ export default function AdminSettingsPage() {
           <div className="flex flex-col gap-6">
             <div>
               <label className="block text-sm text-gray-300 mb-2">
-                首頁主圖路徑
+                首頁背景圖路徑
               </label>
               <input
-                value={heroImage}
-                onChange={(e) => setHeroImage(e.target.value)}
-                placeholder="/images/時序之境_B_單色_光暈.png"
+                value={heroBackgroundImage}
+                onChange={(e) => setHeroBackgroundImage(e.target.value)}
+                placeholder="/images/background.jpg"
                 className="w-full p-3 bg-white/5 border border-white/10 rounded focus:outline-none focus:border-cyan-400 transition"
               />
               <p className="text-xs text-gray-500 mt-2">
-                可使用 public 內的 /images/... 路徑，或完整 https:// 圖片網址。
+                可使用 public 內的 /images/... 路徑，或完整 https:// 圖片網址。留空則使用原本的光暈與粒子背景。
               </p>
             </div>
 
             <div className="rounded-xl border border-white/10 bg-black/30 p-5 flex justify-center">
-              <img
-                src={heroImage || fallbackHeroImage}
-                alt="首頁主圖預覽"
-                className="max-h-64 w-full object-contain"
-              />
+              {heroBackgroundImage ? (
+                <img
+                  src={heroBackgroundImage}
+                  alt="首頁背景預覽"
+                  className="max-h-64 w-full object-cover"
+                />
+              ) : (
+                <div className="text-sm text-gray-500 py-20">
+                  目前使用原本的光暈與粒子背景
+                </div>
+              )}
             </div>
 
             <button

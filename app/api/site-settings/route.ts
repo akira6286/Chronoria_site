@@ -2,15 +2,14 @@ import { NextResponse } from "next/server";
 import db from "@/lib/db";
 import type { ResultSetHeader, RowDataPacket } from "mysql2";
 
-const DEFAULT_HERO_IMAGE = "/images/時序之境_B_單色_光暈.png";
-const HERO_IMAGE_KEY = "hero_image";
+const HERO_BACKGROUND_IMAGE_KEY = "hero_background_image";
 
 type SettingRow = RowDataPacket & {
   value?: string | null;
 };
 
 type SettingsBody = {
-  heroImage?: string;
+  heroBackgroundImage?: string;
 };
 
 const ensureSettingsTable = async () => {
@@ -34,11 +33,11 @@ export async function GET() {
       WHERE \`key\` = ?
       LIMIT 1
       `,
-      [HERO_IMAGE_KEY]
+      [HERO_BACKGROUND_IMAGE_KEY]
     );
 
     return NextResponse.json({
-      heroImage: rows[0]?.value || DEFAULT_HERO_IMAGE,
+      heroBackgroundImage: rows[0]?.value || "",
     });
   } catch (error: unknown) {
     console.error("GET site settings error:", error);
@@ -56,18 +55,11 @@ export async function PATCH(req: Request) {
     await ensureSettingsTable();
 
     const body = (await req.json()) as SettingsBody;
-    const heroImage = body.heroImage?.trim();
+    const heroBackgroundImage = body.heroBackgroundImage?.trim();
 
-    if (!heroImage) {
+    if (heroBackgroundImage && heroBackgroundImage.length > 500) {
       return NextResponse.json(
-        { error: "Missing hero image" },
-        { status: 400 }
-      );
-    }
-
-    if (heroImage.length > 500) {
-      return NextResponse.json(
-        { error: "Hero image path is too long" },
+        { error: "Hero background image path is too long" },
         { status: 400 }
       );
     }
@@ -80,12 +72,12 @@ export async function PATCH(req: Request) {
         \`value\` = VALUES(\`value\`),
         updated_at = NOW()
       `,
-      [HERO_IMAGE_KEY, heroImage]
+      [HERO_BACKGROUND_IMAGE_KEY, heroBackgroundImage ?? ""]
     );
 
     return NextResponse.json({
       success: true,
-      heroImage,
+      heroBackgroundImage: heroBackgroundImage ?? "",
     });
   } catch (error: unknown) {
     console.error("PATCH site settings error:", error);

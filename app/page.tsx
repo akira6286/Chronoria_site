@@ -149,6 +149,7 @@ export default function Home() {
   const total = members.length;
   const currentMember = members[active] ?? fallbackMembers[0];
   const [heroBackgroundImage, setHeroBackgroundImage] = useState<string>("");
+  const [heroLogoImage, setHeroLogoImage] = useState<string>(defaultHeroLogo);
   const hasHeroBackgroundImage = heroBackgroundImage.length > 0;
   const [isAnimating, setIsAnimating] = useState<boolean>(false);
 
@@ -200,6 +201,10 @@ export default function Home() {
           data.heroBackgroundImage.length > 0
         ) {
           setHeroBackgroundImage(data.heroBackgroundImage);
+        }
+
+        if (typeof data.heroLogoImage === "string" && data.heroLogoImage.length > 0) {
+          setHeroLogoImage(data.heroLogoImage);
         }
       } catch (err) {
         console.error("fetch site settings error:", err);
@@ -603,7 +608,7 @@ export default function Home() {
 
     {/* ⭐ LOGO（中層 → 動較小） */}
     <motion.img
-      src={defaultHeroLogo}
+      src={heroLogoImage}
       style={{
         x: useTransform(heroTranslateX, (v) => v * 0.5),
         y: useTransform(heroTranslateY, (v) => v * 0.5),

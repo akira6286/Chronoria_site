@@ -2,8 +2,11 @@
 
 import { useEffect, useState } from "react";
 
+const defaultHeroLogo = "/images/時序之境_B_單色_光暈.png";
+
 export default function AdminSettingsPage() {
   const [heroBackgroundImage, setHeroBackgroundImage] = useState("");
+  const [heroLogoImage, setHeroLogoImage] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -19,6 +22,9 @@ export default function AdminSettingsPage() {
         const data = await res.json();
         if (typeof data.heroBackgroundImage === "string") {
           setHeroBackgroundImage(data.heroBackgroundImage);
+        }
+        if (typeof data.heroLogoImage === "string") {
+          setHeroLogoImage(data.heroLogoImage);
         }
       } catch (err) {
         console.error("fetch site settings error:", err);
@@ -38,7 +44,7 @@ export default function AdminSettingsPage() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ heroBackgroundImage }),
+        body: JSON.stringify({ heroBackgroundImage, heroLogoImage }),
       });
 
       if (!res.ok) throw new Error("API error");
@@ -93,6 +99,29 @@ export default function AdminSettingsPage() {
                   目前使用原本的光暈與粒子背景
                 </div>
               )}
+            </div>
+
+            <div>
+              <label className="block text-sm text-gray-300 mb-2">
+                首頁 Logo 圖路徑
+              </label>
+              <input
+                value={heroLogoImage}
+                onChange={(e) => setHeroLogoImage(e.target.value)}
+                placeholder={defaultHeroLogo}
+                className="w-full p-3 bg-white/5 border border-white/10 rounded focus:outline-none focus:border-cyan-400 transition"
+              />
+              <p className="text-xs text-gray-500 mt-2">
+                留空則使用原本會飄動的時序之境 Logo。
+              </p>
+            </div>
+
+            <div className="rounded-xl border border-white/10 bg-black/30 p-5 flex justify-center">
+              <img
+                src={heroLogoImage || defaultHeroLogo}
+                alt="首頁 Logo 預覽"
+                className="max-h-64 w-full object-contain"
+              />
             </div>
 
             <button

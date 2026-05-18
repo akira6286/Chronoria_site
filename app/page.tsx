@@ -28,6 +28,8 @@ type Particle = {
   vy: number;
 };
 
+const fallbackHeroImage = "/images/時序之境_B_單色_光暈.png";
+
 export default function Home() {
   /* ===== 成員 ===== */
   const fallbackMembers: Member[] = [
@@ -146,6 +148,7 @@ export default function Home() {
   const [active, setActive] = useState<number>(0);
   const total = members.length;
   const currentMember = members[active] ?? fallbackMembers[0];
+  const [heroImage, setHeroImage] = useState<string>(fallbackHeroImage);
   const [isAnimating, setIsAnimating] = useState<boolean>(false);
 
   useEffect(() => {
@@ -182,6 +185,24 @@ export default function Home() {
     };
 
     fetchMembers();
+  }, []);
+
+  useEffect(() => {
+    const fetchSiteSettings = async () => {
+      try {
+        const res = await fetch("/api/site-settings", { cache: "no-store" });
+        if (!res.ok) throw new Error("API error");
+
+        const data = await res.json();
+        if (typeof data.heroImage === "string" && data.heroImage.length > 0) {
+          setHeroImage(data.heroImage);
+        }
+      } catch (err) {
+        console.error("fetch site settings error:", err);
+      }
+    };
+
+    fetchSiteSettings();
   }, []);
 
   const prevMember = () => {
@@ -557,7 +578,7 @@ export default function Home() {
 
     {/* ⭐ LOGO（中層 → 動較小） */}
     <motion.img
-      src="/images/時序之境_B_單色_光暈.png"
+      src={heroImage}
       style={{
         x: useTransform(heroTranslateX, (v) => v * 0.5),
         y: useTransform(heroTranslateY, (v) => v * 0.5),

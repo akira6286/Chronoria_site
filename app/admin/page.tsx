@@ -18,14 +18,38 @@ export default function AdminHome() {
       <div className="max-w-3xl mx-auto grid gap-6">
 
         <Link
-          href="/admin/settings"
+          href="/admin/hero-background"
           className="block p-6 rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-xl hover:border-cyan-400/40 transition shadow-[0_0_30px_rgba(0,200,255,0.06)]"
         >
           <h2 className="text-xl font-semibold mb-2">
-            首頁設定
+            首頁背景圖
           </h2>
           <p className="text-gray-400 text-sm">
             管理首頁最上方背景圖
+          </p>
+        </Link>
+
+        <Link
+          href="/admin/hero-logo"
+          className="block p-6 rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-xl hover:border-cyan-400/40 transition shadow-[0_0_30px_rgba(0,200,255,0.06)]"
+        >
+          <h2 className="text-xl font-semibold mb-2">
+            首頁 Logo
+          </h2>
+          <p className="text-gray-400 text-sm">
+            管理首頁會飄動的 Logo
+          </p>
+        </Link>
+
+        <Link
+          href="/admin/world"
+          className="block p-6 rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-xl hover:border-cyan-400/40 transition shadow-[0_0_30px_rgba(0,200,255,0.06)]"
+        >
+          <h2 className="text-xl font-semibold mb-2">
+            世界觀設定
+          </h2>
+          <p className="text-gray-400 text-sm">
+            管理首頁世界觀文字
           </p>
         </Link>
 

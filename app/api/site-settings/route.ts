@@ -17,6 +17,19 @@ type SettingsBody = {
   worldText?: string;
 };
 
+const upsertSetting = async (key: string, value: string) => {
+  await db.query<ResultSetHeader>(
+    `
+    INSERT INTO site_settings (\`key\`, \`value\`, updated_at)
+    VALUES (?, ?, NOW())
+    ON DUPLICATE KEY UPDATE
+      \`value\` = VALUES(\`value\`),
+      updated_at = NOW()
+    `,
+    [key, value]
+  );
+};
+
 const ensureSettingsTable = async () => {
   await db.query(`
     CREATE TABLE IF NOT EXISTS site_settings (
@@ -62,60 +75,44 @@ export async function PATCH(req: Request) {
     await ensureSettingsTable();
 
     const body = (await req.json()) as SettingsBody;
-    const heroBackgroundImage = body.heroBackgroundImage?.trim();
-    const heroLogoImage = body.heroLogoImage?.trim();
-    const worldText = body.worldText?.trim();
+    const heroBackgroundImage = body.heroBackgroundImage?.trim() ?? "";
+    const heroLogoImage = body.heroLogoImage?.trim() ?? "";
+    const worldText = body.worldText?.trim() ?? "";
 
-    if (heroBackgroundImage && heroBackgroundImage.length > 500) {
+    if (
+      body.heroBackgroundImage !== undefined &&
+      heroBackgroundImage.length > 500
+    ) {
       return NextResponse.json(
         { error: "Hero background image path is too long" },
         { status: 400 }
       );
     }
 
-    if (heroLogoImage && heroLogoImage.length > 500) {
+    if (body.heroLogoImage !== undefined && heroLogoImage.length > 500) {
       return NextResponse.json(
         { error: "Hero logo image path is too long" },
         { status: 400 }
       );
     }
 
-    await db.query<ResultSetHeader>(
-      `
-      INSERT INTO site_settings (\`key\`, \`value\`, updated_at)
-      VALUES (?, ?, NOW())
-      ON DUPLICATE KEY UPDATE
-        \`value\` = VALUES(\`value\`),
-        updated_at = NOW()
-      `,
-      [HERO_BACKGROUND_IMAGE_KEY, heroBackgroundImage ?? ""]
-    );
-    await db.query<ResultSetHeader>(
-      `
-      INSERT INTO site_settings (\`key\`, \`value\`, updated_at)
-      VALUES (?, ?, NOW())
-      ON DUPLICATE KEY UPDATE
-        \`value\` = VALUES(\`value\`),
-        updated_at = NOW()
-      `,
-      [HERO_LOGO_IMAGE_KEY, heroLogoImage ?? ""]
-    );
-    await db.query<ResultSetHeader>(
-      `
-      INSERT INTO site_settings (\`key\`, \`value\`, updated_at)
-      VALUES (?, ?, NOW())
-      ON DUPLICATE KEY UPDATE
-        \`value\` = VALUES(\`value\`),
-        updated_at = NOW()
-      `,
-      [WORLD_TEXT_KEY, worldText ?? ""]
-    );
+    if (body.heroBackgroundImage !== undefined) {
+      await upsertSetting(HERO_BACKGROUND_IMAGE_KEY, heroBackgroundImage);
+    }
+
+    if (body.heroLogoImage !== undefined) {
+      await upsertSetting(HERO_LOGO_IMAGE_KEY, heroLogoImage);
+    }
+
+    if (body.worldText !== undefined) {
+      await upsertSetting(WORLD_TEXT_KEY, worldText);
+    }
 
     return NextResponse.json({
       success: true,
-      heroBackgroundImage: heroBackgroundImage ?? "",
-      heroLogoImage: heroLogoImage ?? "",
-      worldText: worldText ?? "",
+      heroBackgroundImage,
+      heroLogoImage,
+      worldText,
     });
   } catch (error: unknown) {
     console.error("PATCH site settings error:", error);

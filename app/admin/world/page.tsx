@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 
-const defaultHeroLogo = "/images/時序之境_B_單色_光暈.png";
 const defaultWorldText =
   "在時間交錯的縫隙之中，誕生了無數的意識與存在。時序之境，是所有時間的交會點。\n" +
   "原本穩定流動的時間，近來開始出現異常——裂隙，在不同的世界悄然展開。\n\n" +
@@ -20,9 +19,7 @@ const defaultWorldText =
   "只是，她還不知道——這些被帶來的人，或許並不只是「被拯救的存在」。\n" +
   "而是——改變時間的關鍵。";
 
-export default function AdminSettingsPage() {
-  const [heroBackgroundImage, setHeroBackgroundImage] = useState("");
-  const [heroLogoImage, setHeroLogoImage] = useState("");
+export default function AdminWorldPage() {
   const [worldText, setWorldText] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -37,17 +34,11 @@ export default function AdminSettingsPage() {
         if (!res.ok) throw new Error("API error");
 
         const data = await res.json();
-        if (typeof data.heroBackgroundImage === "string") {
-          setHeroBackgroundImage(data.heroBackgroundImage);
-        }
-        if (typeof data.heroLogoImage === "string") {
-          setHeroLogoImage(data.heroLogoImage);
-        }
         if (typeof data.worldText === "string") {
           setWorldText(data.worldText);
         }
       } catch (err) {
-        console.error("fetch site settings error:", err);
+        console.error("fetch world text error:", err);
       } finally {
         setLoading(false);
       }
@@ -64,14 +55,14 @@ export default function AdminSettingsPage() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ heroBackgroundImage, heroLogoImage, worldText }),
+        body: JSON.stringify({ worldText }),
       });
 
       if (!res.ok) throw new Error("API error");
 
-      alert("首頁設定已更新");
+      alert("世界觀文字已更新");
     } catch (err) {
-      console.error("update site settings error:", err);
+      console.error("update world text error:", err);
       alert("更新失敗");
     } finally {
       setSaving(false);
@@ -82,7 +73,7 @@ export default function AdminSettingsPage() {
     <div className="relative z-10 min-h-screen text-white px-6 py-16">
       <div className="max-w-3xl mx-auto mb-12 text-center">
         <h1 className="text-3xl font-bold tracking-widest mb-4">
-          首頁設定
+          世界觀設定
         </h1>
         <div className="h-px w-32 mx-auto bg-gradient-to-r from-transparent via-cyan-400 to-transparent" />
       </div>
@@ -94,65 +85,13 @@ export default function AdminSettingsPage() {
           <div className="flex flex-col gap-6">
             <div>
               <label className="block text-sm text-gray-300 mb-2">
-                首頁背景圖路徑
-              </label>
-              <input
-                value={heroBackgroundImage}
-                onChange={(e) => setHeroBackgroundImage(e.target.value)}
-                placeholder="/images/background.jpg"
-                className="w-full p-3 bg-white/5 border border-white/10 rounded focus:outline-none focus:border-cyan-400 transition"
-              />
-              <p className="text-xs text-gray-500 mt-2">
-                可使用 public 內的 /images/... 路徑，或完整 https:// 圖片網址。留空則使用原本的光暈與粒子背景。
-              </p>
-            </div>
-
-            <div className="rounded-xl border border-white/10 bg-black/30 p-5 flex justify-center">
-              {heroBackgroundImage ? (
-                <img
-                  src={heroBackgroundImage}
-                  alt="首頁背景預覽"
-                  className="max-h-64 w-full object-cover"
-                />
-              ) : (
-                <div className="text-sm text-gray-500 py-20">
-                  目前使用原本的光暈與粒子背景
-                </div>
-              )}
-            </div>
-
-            <div>
-              <label className="block text-sm text-gray-300 mb-2">
-                首頁 Logo 圖路徑
-              </label>
-              <input
-                value={heroLogoImage}
-                onChange={(e) => setHeroLogoImage(e.target.value)}
-                placeholder={defaultHeroLogo}
-                className="w-full p-3 bg-white/5 border border-white/10 rounded focus:outline-none focus:border-cyan-400 transition"
-              />
-              <p className="text-xs text-gray-500 mt-2">
-                留空則使用原本會飄動的時序之境 Logo。
-              </p>
-            </div>
-
-            <div className="rounded-xl border border-white/10 bg-black/30 p-5 flex justify-center">
-              <img
-                src={heroLogoImage || defaultHeroLogo}
-                alt="首頁 Logo 預覽"
-                className="max-h-64 w-full object-contain"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm text-gray-300 mb-2">
                 世界觀文字
               </label>
               <textarea
                 value={worldText}
                 onChange={(e) => setWorldText(e.target.value)}
                 placeholder={defaultWorldText}
-                className="w-full p-3 bg-white/5 border border-white/10 rounded h-64 focus:outline-none focus:border-cyan-400 transition"
+                className="w-full p-3 bg-white/5 border border-white/10 rounded h-80 focus:outline-none focus:border-cyan-400 transition"
               />
               <p className="text-xs text-gray-500 mt-2">
                 留空則使用原本寫死的世界觀文字。換行會保留在首頁動畫中。
@@ -164,7 +103,7 @@ export default function AdminSettingsPage() {
               disabled={saving}
               className="px-4 py-3 rounded-lg bg-cyan-500/20 border border-cyan-400/30 hover:bg-cyan-500/30 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {saving ? "儲存中..." : "儲存設定"}
+              {saving ? "儲存中..." : "儲存世界觀"}
             </button>
           </div>
         )}
